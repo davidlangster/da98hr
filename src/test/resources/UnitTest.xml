@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<UnitTest>
+    <Suites>
+        <Suite id="test#1" class="com.funkdefino.da98hr.ConfigurationUnitTest">
+            <method>test01</method>
+        </Suite>
+        <Suite id="test#2" class="com.funkdefino.da98hr.ProcessorUnitTest">
+            <method>test01</method>
+        </Suite>
+    </Suites>
+</UnitTest>

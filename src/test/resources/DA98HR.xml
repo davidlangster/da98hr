@@ -1,0 +1,5 @@
+<DA98HR>
+    <Input>USB MS1x1 MIDI Interface</Input>
+    <Output>USB MS1x1 MIDI Interface</Output>
+    <Debug send="true" recv="true"/>
+</DA98HR>
