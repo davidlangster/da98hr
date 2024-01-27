@@ -2,7 +2,7 @@ package com.funkdefino.da98hr;
 
 import com.funkdefino.common.util.xml.XmlDocument;
 import com.funkdefino.da98hr.util.Configuration;
-import com.funkdefino.da98hr.midi.MidiCommon;
+import com.funkdefino.common.midi.MidiCommon;
 
 import javax.sound.midi.MidiDevice;
 import java.io.File;

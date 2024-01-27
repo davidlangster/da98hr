@@ -3,7 +3,7 @@ package com.funkdefino.da98hr;
 import com.funkdefino.common.unittest.CTestCase;
 import com.funkdefino.common.util.xml.XmlDocument;
 import com.funkdefino.da98hr.util.Configuration;
-import com.funkdefino.da98hr.midi.MidiCommon;
+import com.funkdefino.common.midi.MidiCommon;
 import junit.framework.Test;
 import javax.sound.midi.*;
 
@@ -39,8 +39,6 @@ public final class ProcessorUnitTest extends CTestCase {
 
         MidiDevice input  = MidiCommon.getDevice("USB MS1x1 MIDI Interface", MidiCommon.Type.Input );
         MidiDevice output = MidiCommon.getDevice("USB MS1x1 MIDI Interface", MidiCommon.Type.Output);
-        System.out.println(input.getDeviceInfo().getName ());
-        System.out.println(output.getDeviceInfo().getName());
 
         XmlDocument doc = XmlDocument.fromResource(getClass(), "DA98HR.xml");
         Configuration config = new Configuration(doc.getRootElement());
