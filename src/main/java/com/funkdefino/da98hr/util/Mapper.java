@@ -22,18 +22,20 @@ public final class Mapper {
 
     //** ------------------------------------------------------------- Constants
 
-    private final static int MATRIX_BASE  = 8;
-    private final static int MATRIX_FDR   = MATRIX_BASE;
-    private final static int MATRIX_VPOT  = MATRIX_BASE + 16;
-    private final static int MATRIX_SELSW = MATRIX_BASE + 64;
-    private final static int MATRIX_VSEL  = MATRIX_BASE + 80;
-    private final static int DA_VOLUME    = 0x07;
-    private final static int DA_PAN       = 0x0A;
-    private final static int DA_MUTE      = 0x0B;
+    private final static int MATRIX_BASE   = 8;
+    private final static int MATRIX_FDR    = MATRIX_BASE;
+    private final static int MATRIX_VPOT   = MATRIX_BASE + 16;
+    private final static int MATRIX_SELSW  = MATRIX_BASE + 64;
+    private final static int MATRIX_VSEL   = MATRIX_BASE + 80;
+    private final static int RECORD_STROBE = 0x7F;
+    private final static int DA_VOLUME     = 0x07;
+    private final static int DA_PAN        = 0x0A;
+    private final static int DA_MUTE       = 0x0B;
 
     //** ------------------------------------------------------------------ Data
 
-    private static byte state;  // Track arm state
+    private static byte    state;  // Track arm state
+    private static boolean strobe; // Record strobe state
 
     //** ------------------------------------------------------------ Operations
 
@@ -49,10 +51,19 @@ public final class Mapper {
      */
     public static MidiMessage translate(ShortMessage smsg) throws Exception {
 
-        if(smsg.getChannel() != 0) return null;
 
         int ctrl = smsg.getData1();
         int val  = smsg.getData2();
+
+        // ** Record Strobe from OP1 **
+
+        if(ctrl == RECORD_STROBE && val == 0x7F) {
+            return record((strobe ^= true));
+        }
+
+        //** MATRIX processing **
+
+        if(smsg.getChannel() != 0) return null;
 
         MidiMessage message = null;
         int channel;
@@ -74,7 +85,7 @@ public final class Mapper {
                 channel = ctrl - MATRIX_SELSW;
                 if(val > 0) state |= (byte)(0x01 << channel);
                 else state &= (byte)(~(0x01 << channel));
-                message = format(state);
+                message = trackArm(state);
                 break;
             default:
                 break;
@@ -93,7 +104,7 @@ public final class Mapper {
      * @return the SysexMessage.
      * @throws Exception on error.
      */
-    public static SysexMessage format(byte state) throws Exception {
+    public static SysexMessage trackArm(byte state) throws Exception {
 
         int arm1 = (state & 0b00000011) << 5;
         int arm2 = (state & 0b11111100) >> 2;
@@ -113,7 +124,28 @@ public final class Mapper {
 
         return new SysexMessage(buf, buf.length);
 
-    }   // format()
+    }   // trackArm()
+
+    /**
+     * Formats the MMC record strobe message.
+     * @param strobe the runtime strobe state.
+     * @return the SysexMessage.
+     * @throws Exception on error.
+     */
+    public static SysexMessage record(boolean strobe) throws Exception {
+
+        byte[] buf = new byte[6];
+
+        buf[0] = (byte)0xF0;
+        buf[1] = (byte)0x7F;
+        buf[2] = (byte)0x7F;
+        buf[3] = (byte)0x06;                   // Command
+        buf[4] = (byte)(strobe ? 0x06 : 0x07); // Record strobe / exit
+        buf[5] = (byte)0xF7;
+
+        return new SysexMessage(buf, buf.length);
+
+    }   // record()
 
     //** -------------------------------------------------------- Implementation
 

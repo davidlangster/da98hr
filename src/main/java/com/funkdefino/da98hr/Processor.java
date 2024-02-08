@@ -58,6 +58,14 @@ public final class Processor {
                     ShortMessage sm = (ShortMessage) message;
                     System.out.printf("[snd] B%X %02X %02X%n", sm.getChannel(), sm.getData1(), sm.getData2());
                 }
+                else if(message instanceof SysexMessage) {
+                    SysexMessage sm = (SysexMessage) message;
+                    System.out.print("[snd] ");
+                    for(int i = 0; i < sm.getLength() - 1; i++) {
+                        System.out.printf("%02X ", sm.getData()[i]);
+                    }
+                    System.out.printf("%n");
+                }
             }
 
         }
