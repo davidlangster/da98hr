@@ -22,15 +22,16 @@ public final class Mapper {
 
     //** ------------------------------------------------------------- Constants
 
-    private final static int MATRIX_BASE   = 8;
-    private final static int MATRIX_FDR    = MATRIX_BASE;
-    private final static int MATRIX_VPOT   = MATRIX_BASE + 16;
-    private final static int MATRIX_SELSW  = MATRIX_BASE + 64;
-    private final static int MATRIX_VSEL   = MATRIX_BASE + 80;
-    private final static int RECORD_STROBE = 0x7F;
-    private final static int DA_VOLUME     = 0x07;
-    private final static int DA_PAN        = 0x0A;
-    private final static int DA_MUTE       = 0x0B;
+    private final static int MATRIX_BASE    = 8;
+    private final static int MATRIX_FDR     = MATRIX_BASE;
+    private final static int MATRIX_VPOT    = MATRIX_BASE + 16;
+    private final static int MATRIX_SELSW   = MATRIX_BASE + 64;
+    private final static int MATRIX_VSEL    = MATRIX_BASE + 80;
+    private final static int RECORD_STROBE1 = 118;
+    private final static int RECORD_STROBE2 = 127;
+    private final static int DA_VOLUME      = 0x07;
+    private final static int DA_PAN         = 0x0A;
+    private final static int DA_MUTE        = 0x0B;
 
     //** ------------------------------------------------------------------ Data
 
@@ -55,9 +56,15 @@ public final class Mapper {
         int ctrl = smsg.getData1();
         int val  = smsg.getData2();
 
+        // ** Record Strobe from ProTools **
+
+        if(ctrl == RECORD_STROBE1) {
+            return record(val > 0x00);
+        }
+
         // ** Record Strobe from OP1 **
 
-        if(ctrl == RECORD_STROBE && val == 0x7F) {
+        if(ctrl == RECORD_STROBE2 && val == 0x7F) {
             return record((strobe ^= true));
         }
 
@@ -82,10 +89,10 @@ public final class Mapper {
                 message = new ShortMessage(ShortMessage.CONTROL_CHANGE, channel, DA_MUTE,   val);
                 break;
             case SelSw:
-                channel = ctrl - MATRIX_SELSW;
-                if(val > 0) state |= (byte)(0x01 << channel);
-                else state &= (byte)(~(0x01 << channel));
-                message = trackArm(state);
+                // channel = ctrl - MATRIX_SELSW;
+                // if(val > 0) state |= (byte)(0x01 << channel);
+                // else state &= (byte)(~(0x01 << channel));
+                // message = trackArm(state);
                 break;
             default:
                 break;
