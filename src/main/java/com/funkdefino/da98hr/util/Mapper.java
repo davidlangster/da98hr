@@ -29,6 +29,7 @@ public final class Mapper {
     private final static int MATRIX_VSEL    = MATRIX_BASE + 80;
     private final static int RECORD_STROBE1 = 118;
     private final static int RECORD_STROBE2 = 127;
+    private final static int CHASE          = 126;
     private final static int DA_VOLUME      = 0x07;
     private final static int DA_PAN         = 0x0A;
     private final static int DA_MUTE        = 0x0B;
@@ -37,6 +38,7 @@ public final class Mapper {
 
     private static byte    state;  // Track arm state
     private static boolean strobe; // Record strobe state
+    private static boolean chs;    // Chase state
 
     //** ------------------------------------------------------------ Operations
 
@@ -62,10 +64,13 @@ public final class Mapper {
             return record(val > 0x00);
         }
 
-        // ** Record Strobe from OP1 **
+        // ** Record Strobe or Chase from OP1 **
 
         if(ctrl == RECORD_STROBE2 && val == 0x7F) {
             return record((strobe ^= true));
+        }
+        if(ctrl == CHASE && val == 0x7F) {
+            return chase((chs ^= true));
         }
 
         //** MATRIX processing **
@@ -103,7 +108,7 @@ public final class Mapper {
     }   // translate()
 
     /**
-     * Formats the MMC track arm message.
+     * Formats an MMC track arm message.
      *  +--+--+--+--+--+--+--+--+  +--+--+--+--+--+--+--+--+
      *  +  +T2+T1+  +  +  +  +  +  +  +  +T8+T7+T6+T5+T4+T3+
      *  +--+--+--+--+--+--+--+--+  +--+--+--+--+--+--+--+--+
@@ -111,7 +116,7 @@ public final class Mapper {
      * @return the SysexMessage.
      * @throws Exception on error.
      */
-    public static SysexMessage trackArm(byte state) throws Exception {
+    private static SysexMessage trackArm(byte state) throws Exception {
 
         int arm1 = (state & 0b00000011) << 5;
         int arm2 = (state & 0b11111100) >> 2;
@@ -134,12 +139,12 @@ public final class Mapper {
     }   // trackArm()
 
     /**
-     * Formats the MMC record strobe message.
+     * Formats an MMC record strobe message.
      * @param strobe the runtime strobe state.
      * @return the SysexMessage.
      * @throws Exception on error.
      */
-    public static SysexMessage record(boolean strobe) throws Exception {
+    private static SysexMessage record(boolean strobe) throws Exception {
 
         byte[] buf = new byte[6];
 
@@ -153,6 +158,27 @@ public final class Mapper {
         return new SysexMessage(buf, buf.length);
 
     }   // record()
+
+    /**
+     * Formats an MMC chase message.
+     * @param chs the runtime chase state.
+     * @return the SysexMessage.
+     * @throws Exception on error.
+     */
+    private static SysexMessage chase(boolean chs) throws Exception {
+
+        byte[] buf = new byte[6];
+
+        buf[0] = (byte)0xF0;
+        buf[1] = (byte)0x7F;
+        buf[2] = (byte)0x7F;
+        buf[3] = (byte)0x06;                // Command
+        buf[4] = (byte)(chs ? 0x0B : 0x01); // Chase / Stop
+        buf[5] = (byte)0xF7;
+
+        return new SysexMessage(buf, buf.length);
+
+    }   // chase()
 
     //** -------------------------------------------------------- Implementation
 
